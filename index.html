@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trendy.pe — De la idea a la empresa, y el vendedor que no duerme</title>
+<meta name="description" content="Cómo construí Trendy.pe SAC desde cero y luego diseñé TrendyBot, un vendedor automatizado con IA sobre WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12151b;
+    --ink-2:#191d25;
+    --paper:#e7dfc9;
+    --paper-2:#efe9db;
+    --gold:#c9972c;
+    --jade:#3c8671;
+    --text:#f2efe6;
+    --text-dim:#a8a398;
+    --line:#2a2e37;
+    --red-stamp:#a8422f;
+    --maxw:1120px;
+  }
+
+  @media (prefers-color-scheme: light){
+    :root{ /* page is intentionally single-theme (ledger at night); no override needed */ }
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--text);
+    font-family:'Work Sans',-apple-system,sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--gold);color:var(--ink);}
+
+  a{color:inherit;}
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--gold);
+    outline-offset:3px;
+  }
+
+  h1,h2,h3{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:700;
+    letter-spacing:0.002em;
+    margin:0;
+  }
+
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .wrap{
+    max-width:var(--maxw);
+    margin:0 auto;
+    padding:0 28px;
+  }
+
+  @media (max-width:640px){
+    .wrap{padding:0 20px;}
+  }
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky;
+    top:0;
+    z-index:50;
+    background:rgba(18,21,27,0.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    height:64px;
+  }
+  .logo{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:800;
+    font-size:22px;
+    letter-spacing:0.01em;
+    text-decoration:none;
+    color:var(--text);
+  }
+  .logo span{color:var(--gold);}
+  .navlinks{
+    display:flex;
+    gap:28px;
+    font-size:14px;
+    color:var(--text-dim);
+  }
+  .navlinks a{text-decoration:none;transition:color .15s;}
+  .navlinks a:hover{color:var(--gold);}
+  @media (max-width:720px){
+    .navlinks{display:none;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:88px 0 64px;
+    border-bottom:1px solid var(--line);
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-grain{
+    position:absolute;
+    inset:0;
+    background-image:radial-gradient(circle at 85% 15%, rgba(201,151,44,0.09), transparent 45%);
+    pointer-events:none;
+  }
+  .tag-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:28px;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.02em;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    color:var(--text-dim);
+  }
+  .badge.live{
+    border-color:var(--jade);
+    color:var(--jade);
+  }
+  .badge.live::before{
+    content:"";
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--jade);
+    box-shadow:0 0 0 3px rgba(60,134,113,0.25);
+  }
+
+  h1{
+    font-size:clamp(2.6rem, 6vw, 4.6rem);
+    line-height:0.98;
+    max-width:14ch;
+    color:var(--text);
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--gold);
+  }
+
+  .hero-sub{
+    max-width:52ch;
+    margin-top:24px;
+    font-size:18px;
+    color:var(--text-dim);
+  }
+
+  .hero-meta{
+    margin-top:40px;
+    display:flex;
+    gap:40px;
+    flex-wrap:wrap;
+    font-size:14px;
+    color:var(--text-dim);
+  }
+  .hero-meta strong{
+    display:block;
+    color:var(--text);
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;
+    margin-bottom:2px;
+  }
+
+  /* ---------- LEDGER (the journey) ---------- */
+  .ledger{
+    padding:72px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:48px;
+  }
+  .section-head h2{
+    font-size:clamp(1.7rem, 3vw, 2.3rem);
+  }
+  .section-head .count{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-dim);
+  }
+
+  .entry{
+    display:grid;
+    grid-template-columns:72px 1fr;
+    gap:28px;
+    padding:30px 0;
+    border-top:1px solid var(--line);
+  }
+  .entry:last-child{border-bottom:1px solid var(--line);}
+  .entry-num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:14px;
+    color:var(--gold);
+    padding-top:4px;
+  }
+  .entry h3{
+    font-size:clamp(1.2rem, 2.4vw, 1.55rem);
+    font-weight:700;
+    margin-bottom:10px;
+    color:var(--text);
+  }
+  .entry p{
+    max-width:70ch;
+    color:var(--text-dim);
+    font-size:15.5px;
+    margin:0;
+  }
+  .entry strong{color:var(--text);font-weight:600;}
+
+  @media (max-width:640px){
+    .entry{grid-template-columns:1fr;gap:8px;}
+  }
+
+  /* ---------- STAMPS (metrics) ---------- */
+  .stamps{
+    padding:64px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .stamp-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:20px;
+  }
+  @media (max-width:860px){
+    .stamp-grid{grid-template-columns:repeat(2,1fr);}
+  }
+  .stamp{
+    background:var(--paper);
+    color:var(--ink);
+    padding:26px 22px;
+    border-radius:2px;
+    position:relative;
+  }
+  .stamp:nth-child(1){transform:rotate(-0.6deg);}
+  .stamp:nth-child(2){transform:rotate(0.5deg);}
+  .stamp:nth-child(3){transform:rotate(-0.3deg);}
+  .stamp:nth-child(4){transform:rotate(0.7deg);}
+  .stamp .num{
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:800;
+    font-size:2.6rem;
+    line-height:1;
+    color:var(--red-stamp);
+  }
+  .stamp .label{
+    margin-top:8px;
+    font-size:13.5px;
+    color:#4a4536;
+    font-weight:500;
+  }
+
+  /* ---------- TRENDYBOT ---------- */
+  .bot{
+    padding:80px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .bot-grid{
+    display:grid;
+    grid-template-columns:0.95fr 1.05fr;
+    gap:56px;
+    align-items:start;
+    margin-top:44px;
+  }
+  @media (max-width:860px){
+    .bot-grid{grid-template-columns:1fr;}
+  }
+
+  /* chat mockup */
+  .phone{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px 16px 22px;
+  }
+  .phone-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding-bottom:14px;
+    margin-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .phone-avatar{
+    width:34px;height:34px;
+    border-radius:50%;
+    background:var(--jade);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Big Shoulders Display',sans-serif;
+    font-weight:700;
+    color:var(--ink);
+    font-size:14px;
+  }
+  .phone-head .pname{font-size:14px;font-weight:600;}
+  .phone-head .pstatus{font-size:12px;color:var(--jade);}
+
+  .bubble{
+    max-width:84%;
+    padding:10px 13px;
+    border-radius:10px;
+    font-size:13.5px;
+    line-height:1.45;
+    margin-bottom:10px;
+  }
+  .bubble.in{
+    background:#232833;
+    border-top-left-radius:2px;
+  }
+  .bubble.out{
+    background:var(--jade);
+    color:#0d1812;
+    margin-left:auto;
+    border-top-right-radius:2px;
+  }
+  .bubble .tag{
+    display:inline-block;
+    margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    padding:2px 7px;
+    border-radius:3px;
+    background:rgba(0,0,0,0.18);
+  }
+
+  .bot-copy h2{
+    font-size:clamp(1.8rem, 3.2vw, 2.3rem);
+    margin-bottom:18px;
+  }
+  .bot-copy > p{
+    color:var(--text-dim);
+    max-width:62ch;
+    margin-bottom:28px;
+  }
+
+  .spec-list{
+    list-style:none;
+    margin:0;padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .spec-list li{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:16px;
+    font-size:14.5px;
+    padding-bottom:16px;
+    border-bottom:1px solid var(--line);
+  }
+  .spec-list li:last-child{border-bottom:none;padding-bottom:0;}
+  .spec-list .k{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12.5px;
+    color:var(--gold);
+    padding-top:2px;
+  }
+  .spec-list .v{color:var(--text-dim);}
+  .spec-list .v strong{color:var(--text);font-weight:600;}
+
+  /* ---------- STACK CHIPS ---------- */
+  .stack{
+    padding:56px 0 72px;
+    border-bottom:1px solid var(--line);
+  }
+  .stack h2{
+    font-size:1.5rem;
+    margin-bottom:22px;
+  }
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .chip{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    padding:8px 14px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    color:var(--text-dim);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    padding:56px 0 48px;
+  }
+  .foot-grid{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:28px;
+  }
+  footer h2{
+    font-size:clamp(1.8rem,3.4vw,2.5rem);
+    max-width:16ch;
+  }
+  .foot-links{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    font-size:14.5px;
+  }
+  .foot-links a{
+    text-decoration:none;
+    color:var(--text-dim);
+    transition:color .15s;
+  }
+  .foot-links a:hover{color:var(--gold);}
+  .foot-bottom{
+    margin-top:48px;
+    padding-top:20px;
+    border-top:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    font-size:12.5px;
+    color:var(--text-dim);
+    font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* Visible by default — entrance animation is an enhancement only,
+     applied exclusively when the browser confirms motion is welcome.
+     This avoids ever shipping content at opacity:0 with no guaranteed
+     way back to opacity:1. */
+  .reveal{
+    opacity:1;
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .reveal{
+      opacity:0;
+      transform:translateY(10px);
+      animation:reveal .7s ease forwards;
+    }
+    @keyframes reveal{
+      to{opacity:1; transform:translateY(0);}
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a href="#" class="logo">TRENDY<span>.</span>PE</a>
+    <div class="navlinks">
+      <a href="#historia">Historia</a>
+      <a href="#resultados">Resultados</a>
+      <a href="#trendybot">TrendyBot</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-grain"></div>
+  <div class="wrap">
+    <div class="tag-row reveal" style="animation-delay:.05s">
+      <span class="badge">SUNAT y SUNARP · empresa registrada</span>
+      <span class="badge live">TrendyBot en producción</span>
+    </div>
+    <h1 class="reveal" style="animation-delay:.12s">Construimos una empresa desde cero.<br>Luego diseñé un <em>vendedor que no duerme.</em></h1>
+    <p class="hero-sub reveal" style="animation-delay:.2s">
+      Trendy.pe SAC es un negocio de importación que levanté junto a mi socio, sin inversión externa ni experiencia previa. Esta es la ruta completa: del producto a la logística, de la logística al cuello de botella, y del cuello de botella a TrendyBot — un sistema de IA que atiende, clasifica y cierra ventas por WhatsApp de forma autónoma.
+    </p>
+    <div class="hero-meta reveal" style="animation-delay:.3s">
+      <div><strong>Paris Herrera Torres</strong>Gerente General &amp; desarrollador</div>
+      <div><strong>Desde 2024</strong>~1 año de operación continua</div>
+      <div><strong>Equipo</strong>2 personas — sin apoyo externo</div>
+    </div>
+  </div>
+</header>
+
+<section class="ledger" id="historia">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>El recorrido</h2>
+      <span class="count mono">06 entradas</span>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">01</div>
+      <div>
+        <h3>El problema que decidimos resolver</h3>
+        <p>Detectamos una oportunidad en productos tecnológicos pequeños que mejoran una rutina diaria: correctores de postura, máquinas de boxeo musicales, calculadoras con pad de escritura, flores de bloques de construcción. Ninguno existía todavía en el mercado peruano con una marca que los respaldara ni un canal de venta directo al consumidor.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">02</div>
+      <div>
+        <h3>Fundamos Trendy.pe SAC</h3>
+        <p>Con mi socio Iván registramos la empresa ante <strong>SUNAT y SUNARP</strong>. Desde el día uno, los dos nos encargamos de absolutamente todo: investigación de producto, canales de venta, marketing digital, creación de contenido y contacto con proveedores. Nadie nos guió en el proceso — aprendimos haciendo.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">03</div>
+      <div>
+        <h3>Abastecimiento directo en China</h3>
+        <p>Coordinamos con <strong>más de 10 proveedores chinos</strong>, negociando producto, precio y calidad. Iván viajó a China para validar fábricas y showrooms en persona; yo me conectaba por videollamada desde Lima a las 3 a.m. para revisar los productos junto a él en tiempo real. Para nuestra próxima línea de importación —flores decorativas— gestionamos directamente los permisos sanitarios <strong>TUPA 39 y 41 ante DIGESA</strong>, un trámite que tomó cerca de dos meses entre documentación y respuesta.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">04</div>
+      <div>
+        <h3>Validamos con campañas reales, no con hipótesis</h3>
+        <p>Corrimos <strong>5 campañas en Meta Ads</strong> para distintos productos, con un presupuesto ajustado de ~US$3/día cada una, generando en promedio <strong>50 leads diarios</strong>. Eso sostuvo un ciclo de ventas recurrente de hasta 20 pedidos al mes en temporada alta (vacaciones de verano e invierno), con delivery contra entrega en Lima.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">05</div>
+      <div>
+        <h3>El cuello de botella: atender a mano no escala</h3>
+        <p>Cada lead que entraba por WhatsApp había que leerlo, calificarlo y responderlo manualmente — a cualquier hora. Separar un "solo pregunta precio" de un "ya quiere comprar" dependía enteramente de que alguno de los dos estuviera disponible en ese momento. Era el límite real de cuánto podíamos crecer sin contratar a alguien.</p>
+      </div>
+    </div>
+
+    <div class="entry">
+      <div class="entry-num mono">06</div>
+      <div>
+        <h3>Diseñé TrendyBot para resolverlo</h3>
+        <p>Un sistema de IA que conversa por WhatsApp en mi lugar, entiende el historial del cliente, distingue entre un simple interesado y una compra en curso, y actúa en consecuencia — sin que nadie lo supervise mensaje por mensaje. Lo construí yo solo, de principio a fin. Más detalle abajo.</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="stamps" id="resultados">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>En números</h2>
+      <span class="count mono">verificado en operación</span>
+    </div>
+    <div class="stamp-grid">
+      <div class="stamp">
+        <div class="num">20</div>
+        <div class="label">ventas/mes en temporada alta</div>
+      </div>
+      <div class="stamp">
+        <div class="num">50</div>
+        <div class="label">leads/día en promedio por campaña</div>
+      </div>
+      <div class="stamp">
+        <div class="num">10+</div>
+        <div class="label">proveedores chinos coordinados</div>
+      </div>
+      <div class="stamp">
+        <div class="num">2</div>
+        <div class="label">personas construyendo todo, sin apoyo externo</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bot" id="trendybot">
+  <div class="wrap">
+    <div class="bot-grid">
+
+      <div class="phone">
+        <div class="phone-head">
+          <div class="phone-avatar">TB</div>
+          <div>
+            <div class="pname">TrendyBot</div>
+            <div class="pstatus">en línea</div>
+          </div>
+        </div>
+        <div class="bubble in">Hola! 👋 Soy TrendyBot, tu asesor de TrendyFinds. ¿En qué puedo ayudarte hoy? 😄</div>
+        <div class="bubble out">Hola, quiero saber del corrector de postura, cuánto cuesta y si llega a Surco</div>
+        <div class="bubble in">
+          Claro 😊 El corrector de postura está a S/57, con delivery gratis contra entrega en Lima (48h aprox). ¿Te animas a pedirlo?
+          <span class="tag">is_lead: true</span>
+        </div>
+        <div class="bubble out">Sí, lo quiero. Juan Pérez, juan@correo.com, Av. Caminos del Inca 123, Surco, 1 unidad</div>
+        <div class="bubble in">
+          ¡Perfecto Juan! 🎉 Tu pedido quedó registrado, te escribimos para coordinar la entrega.
+          <span class="tag">is_saled: true</span>
+        </div>
+      </div>
+
+      <div class="bot-copy">
+        <h2>Cómo funciona por dentro</h2>
+        <p>No es un flujo de respuestas fijas. Es un sistema con estado: recuerda la conversación, interpreta cuánto tiempo pasó desde el último mensaje, y decide si debe registrar un lead, confirmar una venta, o simplemente seguir conversando.</p>
+
+        <ul class="spec-list">
+          <li>
+            <div class="k">orquestación</div>
+            <div class="v">Flujo completo construido en <strong>n8n</strong>: recepción del mensaje, consulta de historial, armado del prompt, llamada a IA y ejecución de acciones según el resultado.</div>
+          </li>
+          <li>
+            <div class="k">memoria</div>
+            <div class="v"><strong>PostgreSQL</strong> con historial de conversación en <strong>JSONB</strong> por cliente, para que cada respuesta tenga contexto real y no trate cada mensaje como el primero.</div>
+          </li>
+          <li>
+            <div class="k">prompt</div>
+            <div class="v">Diseñado e iterado en 3 secciones — contexto de negocio, historial, mensaje actual — para que la IA clasifique intención y, si corresponde, pida los datos de compra en un solo mensaje.</div>
+          </li>
+          <li>
+            <div class="k">salida</div>
+            <div class="v">JSON estructurado con <strong>is_lead</strong> e <strong>is_saled</strong>, que dispara acciones distintas: guardar un lead, o registrar la venta y enviar la confirmación por correo.</div>
+          </li>
+          <li>
+            <div class="k">infraestructura</div>
+            <div class="v">Desplegado y administrado por mí mismo sobre <strong>Google Cloud</strong> (Compute Engine), corriendo en producción sobre pedidos reales de Trendy.pe.</div>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="wrap">
+    <h2>Herramientas que entraron en juego</h2>
+    <div class="chips">
+      <span class="chip">n8n</span>
+      <span class="chip">PostgreSQL · JSONB</span>
+      <span class="chip">Google Cloud</span>
+      <span class="chip">Prompt engineering</span>
+      <span class="chip">Meta Ads</span>
+      <span class="chip">Gestión de importaciones</span>
+      <span class="chip">TUPA / DIGESA</span>
+      <span class="chip">Negociación con proveedores</span>
+    </div>
+  </div>
+</section>
+
+<footer id="contacto">
+  <div class="wrap">
+    <div class="foot-grid">
+      <h2>¿Hablamos del siguiente capítulo?</h2>
+      <div class="foot-links">
+        <a href="mailto:paris.herrerat@gmail.com">paris.herrerat@gmail.com</a>
+        <a href="https://github.com/Parislht" target="_blank" rel="noopener">github.com/Parislht</a>
+        <a href="https://www.linkedin.com/in/paris-herrera" target="_blank" rel="noopener">linkedin.com/in/paris-herrera</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>Trendy.pe SAC — Lima, Perú</span>
+      <span>Portafolio — Innovación y Negocio</span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
